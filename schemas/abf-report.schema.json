@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/busfactor-analyzer/schemas/abf-report.schema.json",
+  "title": "ABF Report",
+  "description": "Schema for the complete ABF bus factor analysis report",
+  "type": "object",
+  "required": ["summary", "analysis", "constants", "topContributors", "fileOwnership", "fileAuthorshipMap", "interpretation"],
+  "properties": {
+    "summary": {
+      "type": "object",
+      "required": ["busFactor", "totalFiles", "totalContributors", "criticalContributors"],
+      "properties": {
+        "busFactor": {
+          "type": "integer",
+          "description": "The calculated bus factor value",
+          "minimum": 1
+        },
+        "totalFiles": {
+          "type": "integer",
+          "description": "Total number of files analyzed",
+          "minimum": 0
+        },
+        "totalContributors": {
+          "type": "integer",
+          "description": "Total number of unique contributors",
+          "minimum": 0
+        },
+        "criticalContributors": {
+          "type": "array",
+          "description": "List of critical contributors whose loss would exceed the threshold",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "analysis": {
+      "type": "object",
+      "required": ["method", "description", "finalOwnerlessRatio", "threshold"],
+      "properties": {
+        "method": {
+          "type": "string",
+          "description": "Analysis method used",
+          "const": "Avelino et al. - ABF (Authorship-Based Factor)"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the analysis method"
+        },
+        "finalOwnerlessRatio": {
+          "type": "number",
+          "description": "Final ratio of files without owners",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "threshold": {
+          "type": "number",
+          "description": "Threshold for determining bus factor",
+          "const": 0.5
+        }
+      }
+    },
+    "constants": {
+      "type": "object",
+      "required": ["threshold"],
+      "properties": {
+        "threshold": {
+          "type": "number",
+          "description": "Threshold constant used in calculation",
+          "const": 0.5
+        }
+      }
+    },
+    "topContributors": {
+      "type": "array",
+      "description": "Top 10 contributors by degree of authorship",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "required": ["author", "degreeOfAuthorship", "filesOwned"],
+        "properties": {
+          "author": {
+            "type": "string",
+            "description": "Contributor name"
+          },
+          "degreeOfAuthorship": {
+            "type": "string",
+            "description": "Percentage of files owned by this contributor",
+            "pattern": "^\\d+\\.\\d{2}%$"
+          },
+          "filesOwned": {
+            "type": "integer",
+            "description": "Approximate number of files owned",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "fileOwnership": {
+      "type": "object",
+      "description": "Map of file paths to their primary owners",
+      "additionalProperties": {
+        "type": ["string", "null"],
+        "description": "Primary author of the file"
+      }
+    },
+    "fileAuthorshipMap": {
+      "type": "object",
+      "description": "Detailed authorship information for each file",
+      "additionalProperties": {
+        "type": "object",
+        "description": "Authorship details for a specific file",
+        "additionalProperties": {
+          "type": "object",
+          "required": ["lines", "percentage"],
+          "properties": {
+            "lines": {
+              "type": "integer",
+              "description": "Number of lines authored",
+              "minimum": 0
+            },
+            "percentage": {
+              "type": "string",
+              "description": "Percentage of file authored",
+              "pattern": "^\\d+\\.\\d{2}$"
+            }
+          }
+        }
+      }
+    },
+    "interpretation": {
+      "type": "object",
+      "required": ["risk", "message", "recommendation"],
+      "properties": {
+        "risk": {
+          "type": "string",
+          "description": "Risk level assessment",
+          "enum": ["CRITICAL", "HIGH", "MODERATE", "LOW"]
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable interpretation of the bus factor"
+        },
+        "recommendation": {
+          "type": "string",
+          "description": "Recommendation based on the analysis"
+        }
+      }
+    }
+  }
+}

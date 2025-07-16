@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/busfactor-analyzer/schemas/abf-calculation-result.schema.json",
+  "title": "ABF Calculation Result",
+  "description": "Schema for the internal result of ABF bus factor calculation",
+  "type": "object",
+  "required": ["busFactor", "removedAuthors", "ownerlessRatio", "authorDetails", "fileOwnership"],
+  "properties": {
+    "busFactor": {
+      "type": "integer",
+      "description": "The calculated bus factor value",
+      "minimum": 1
+    },
+    "removedAuthors": {
+      "type": "array",
+      "description": "List of authors removed in order to reach the bus factor",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ownerlessRatio": {
+      "type": "number",
+      "description": "Final ratio of files without owners after removing critical authors",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "authorDetails": {
+      "type": "array",
+      "description": "Authors sorted by their degree of authorship (DOA)",
+      "items": {
+        "type": "object",
+        "required": ["author", "doa"],
+        "properties": {
+          "author": {
+            "type": "string",
+            "description": "Author name"
+          },
+          "doa": {
+            "type": "number",
+            "description": "Degree of authorship (fraction of files owned)",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "fileOwnership": {
+      "type": "object",
+      "description": "Map of file paths to their primary owners",
+      "additionalProperties": {
+        "type": ["string", "null"],
+        "description": "Primary author of the file"
+      }
+    }
+  }
+}

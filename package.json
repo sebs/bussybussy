@@ -1,0 +1,28 @@
+{
+  "name": "busfactor-analyzer",
+  "version": "1.0.0",
+  "description": "A simple bus factor analyzer for Git repositories using the ABF method",
+  "main": "lib/index.js",
+  "type": "module",
+  "bin": {
+    "busfactor-analyzer": "./lib/index.js"
+  },
+  "scripts": {
+    "start": "node lib/index.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "git",
+    "bus-factor",
+    "code-analysis"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "chalk": "^5.3.0",
+    "commander": "^14.0.0",
+    "fs-extra": "^11.1.1",
+    "simple-git": "^3.19.1"
+  }
+}
