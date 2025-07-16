@@ -2,3 +2,5 @@
 node_modules
 .claude
 CLAUDE.MD
+analysis-results
+temp

@@ -27,7 +27,7 @@ The analyzer supports two calculation methods:
 node lib/index.js abf <git-repo-url>
 ```
 
-### JBF (Just Bus Factor)
+### JBF (Jabrayilzade Bus Factor)
 
 ```bash
 node lib/index.js jbf <git-repo-url>
@@ -63,9 +63,12 @@ Implements the method by Avelino et al.:
 3. **Iterative Removal**: Removes developers one by one (starting with highest DOA) until more than 50% of files have adequate coverage from remaining developers
 4. **Bus Factor**: The number of developers removed is the bus factor
 
-### JBF (Just Bus Factor)
+### JBF (Jabrayilzade Bus Factor)
 
-Alternative calculation method focusing on shared knowledge distribution.
+Implements the time-weighted bus factor method by Jabrayilzade et al., which considers:
+- Historical contribution patterns over time
+- Knowledge decay and recency of contributions
+- Weighted authorship based on temporal factors
 
 ## Output
 
