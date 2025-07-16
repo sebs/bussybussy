@@ -1,0 +1,208 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/busfactor-analyzer/schemas/jbf-report.schema.json",
+  "title": "JBF Report",
+  "description": "Schema for the complete JBF bus factor analysis report",
+  "type": "object",
+  "required": ["summary", "analysis", "constants", "topContributors", "fileOwnership", "fileAuthorshipMap", "interpretation"],
+  "properties": {
+    "summary": {
+      "type": "object",
+      "required": ["busFactor", "totalFiles", "totalContributors", "criticalContributors"],
+      "properties": {
+        "busFactor": {
+          "type": "integer",
+          "description": "The calculated bus factor value",
+          "minimum": 1
+        },
+        "totalFiles": {
+          "type": "integer",
+          "description": "Total number of files analyzed",
+          "minimum": 0
+        },
+        "totalContributors": {
+          "type": "integer",
+          "description": "Total number of unique contributors",
+          "minimum": 0
+        },
+        "criticalContributors": {
+          "type": "array",
+          "description": "List of critical contributors whose loss would exceed the threshold",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "analysis": {
+      "type": "object",
+      "required": ["method", "description", "finalOwnerlessRatio", "threshold", "metadata"],
+      "properties": {
+        "method": {
+          "type": "string",
+          "description": "Analysis method used",
+          "const": "Jabrayilzade et al. - JBF (Time-Weighted Bus Factor)"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the analysis method"
+        },
+        "finalOwnerlessRatio": {
+          "type": "number",
+          "description": "Final ratio of files without owners",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "threshold": {
+          "type": "number",
+          "description": "Threshold for determining bus factor",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "metadata": {
+          "type": "object",
+          "required": ["decayRate", "timeWindowDays", "analysisDate"],
+          "properties": {
+            "decayRate": {
+              "type": "number",
+              "description": "Exponential decay rate used for knowledge aging",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "timeWindowDays": {
+              "type": "integer",
+              "description": "Time window in days for considering recent contributions",
+              "minimum": 1
+            },
+            "analysisDate": {
+              "type": "string",
+              "description": "ISO 8601 timestamp of when the analysis was performed",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "constants": {
+      "type": "object",
+      "required": ["threshold", "decayRate", "timeWindow"],
+      "properties": {
+        "threshold": {
+          "type": "number",
+          "description": "Threshold constant used in calculation",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "decayRate": {
+          "type": "number",
+          "description": "Exponential decay rate for knowledge aging",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "timeWindow": {
+          "type": "integer",
+          "description": "Time window in days for recent contributions",
+          "minimum": 1
+        }
+      }
+    },
+    "topContributors": {
+      "type": "array",
+      "description": "Top 10 contributors by weighted degree of authorship",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "required": ["author", "weightedDegreeOfAuthorship", "filesOwned", "recentActivityScore"],
+        "properties": {
+          "author": {
+            "type": "string",
+            "description": "Contributor name"
+          },
+          "weightedDegreeOfAuthorship": {
+            "type": "string",
+            "description": "Percentage of files owned by this contributor after time-weighting",
+            "pattern": "^\\d+\\.\\d{2}%$"
+          },
+          "filesOwned": {
+            "type": "integer",
+            "description": "Approximate number of files owned",
+            "minimum": 0
+          },
+          "recentActivityScore": {
+            "type": "string",
+            "description": "Score representing recent activity level",
+            "pattern": "^\\d+$"
+          }
+        }
+      }
+    },
+    "fileOwnership": {
+      "type": "object",
+      "description": "Map of file paths to their primary owners based on time-weighted contributions",
+      "additionalProperties": {
+        "type": ["string", "null"],
+        "description": "Primary author of the file based on weighted contributions"
+      }
+    },
+    "fileAuthorshipMap": {
+      "type": "object",
+      "description": "Detailed authorship information for each file including time-weighted data",
+      "additionalProperties": {
+        "type": "object",
+        "description": "Authorship details for a specific file",
+        "additionalProperties": {
+          "type": "object",
+          "required": ["lines", "percentage", "weightedLines", "weightedPercentage"],
+          "properties": {
+            "lines": {
+              "type": "integer",
+              "description": "Number of lines authored",
+              "minimum": 0
+            },
+            "percentage": {
+              "type": "string",
+              "description": "Percentage of file authored",
+              "pattern": "^\\d+\\.\\d{2}$"
+            },
+            "weightedLines": {
+              "type": "string",
+              "description": "Time-weighted lines of code",
+              "pattern": "^\\d+\\.\\d{2}$"
+            },
+            "weightedPercentage": {
+              "type": "string",
+              "description": "Time-weighted percentage of file authored",
+              "pattern": "^\\d+\\.\\d{2}$"
+            }
+          }
+        }
+      }
+    },
+    "interpretation": {
+      "type": "object",
+      "required": ["risk", "message", "recommendation"],
+      "properties": {
+        "risk": {
+          "type": "string",
+          "description": "Risk level assessment",
+          "enum": ["CRITICAL", "HIGH", "MODERATE", "LOW"]
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable interpretation of the bus factor"
+        },
+        "recommendation": {
+          "type": "string",
+          "description": "Recommendation based on the analysis"
+        }
+      }
+    },
+    "errors": {
+      "type": "array",
+      "description": "Any errors encountered during analysis",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

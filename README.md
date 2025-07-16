@@ -1,6 +1,6 @@
 # Bus Factor Analyzer
 
-A simple command-line tool to analyze the bus factor of Git repositories using the ABF (Authorship-Based Factor) method by Avelino et al.
+A command-line tool to analyze the bus factor of Git repositories using multiple calculation methods.
 
 ## What is Bus Factor?
 
@@ -10,8 +10,8 @@ The "bus factor" is the minimum number of team members that have to suddenly dis
 
 ```bash
 # Clone the repository
-git clone <this-repo-url>
-cd busfactor-analyzer
+git clone <repo-url>
+cd bus-factor-analyzer
 
 # Install dependencies
 npm install
@@ -19,24 +19,53 @@ npm install
 
 ## Usage
 
-```bash
-node index.js <git-repo-url>
-```
+The analyzer supports two calculation methods:
 
-### Example
+### ABF (Authorship-Based Factor)
 
 ```bash
-node index.js https://github.com/chalk/chalk.git
+node lib/index.js abf <git-repo-url>
 ```
 
-## How it Works
+### JBF (Just Bus Factor)
 
-This analyzer implements the **Contribution-Based (ABF)** method by Avelino et al.:
+```bash
+node lib/index.js jbf <git-repo-url>
+```
+
+### Options
+
+- `--json` - Output results as JSON
+- `--quiet` - Minimal output
+- `--summary` - Summary only
+
+### Examples
+
+```bash
+# Analyze with ABF method
+node lib/index.js abf https://github.com/chalk/chalk.git
+
+# Analyze with JBF method and JSON output
+node lib/index.js jbf https://github.com/chalk/chalk.git --json
+
+# Quiet mode - only show bus factor number
+node lib/index.js abf https://github.com/chalk/chalk.git --quiet
+```
+
+## Calculation Methods
+
+### ABF (Authorship-Based Factor)
+
+Implements the method by Avelino et al.:
 
 1. **Analyze File Ownership**: Uses `git blame` to determine who contributed to each file
 2. **Calculate Degree of Authorship (DOA)**: For each developer, calculates the percentage of files where they own >50% of the code
 3. **Iterative Removal**: Removes developers one by one (starting with highest DOA) until more than 50% of files have adequate coverage from remaining developers
 4. **Bus Factor**: The number of developers removed is the bus factor
+
+### JBF (Just Bus Factor)
+
+Alternative calculation method focusing on shared knowledge distribution.
 
 ## Output
 
@@ -45,7 +74,7 @@ The analyzer provides:
 - **Bus Factor**: The calculated bus factor number
 - **Risk Assessment**: Critical, High, Moderate, or Low risk level
 - **Critical Contributors**: List of developers whose loss would most impact the project
-- **Top Contributors**: Ranked list with their Degree of Authorship
+- **Top Contributors**: Ranked list with their contribution metrics
 - **Recommendations**: Actionable advice based on the risk level
 
 ### Example Output
@@ -77,6 +106,25 @@ Top Contributors (by Degree of Authorship):
      DOA: 28.30% (owns ~42 files)
 ```
 
+## Architecture
+
+The project uses an event-driven architecture with ES modules:
+
+- **Event-Based Progress**: Real-time updates during analysis
+- **Modular Design**: Separate components for Git operations, authorship analysis, and calculations
+- **Schema Validation**: Input/output validation using JSON schemas
+- **Clean Architecture**: Factory pattern for calculation methods
+
+## Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run specific test file
+node --test test/bus-factor-calculator.test.js
+```
+
 ## Limitations
 
 - **Equal File Treatment**: All files are treated as equally important, regardless of complexity or criticality
@@ -86,15 +134,9 @@ Top Contributors (by Degree of Authorship):
 
 ## Requirements
 
-- Node.js 14 or higher
+- Node.js 20 or higher
 - Git installed on your system
 - Access to clone the target repository
-
-## Dependencies
-
-- `simple-git`: Git operations
-- `fs-extra`: File system utilities
-- `chalk`: Terminal styling
 
 ## License
 

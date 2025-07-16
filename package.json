@@ -1,7 +1,7 @@
 {
-  "name": "busfactor-analyzer",
+  "name": "bussybussy",
   "version": "1.0.0",
-  "description": "A simple bus factor analyzer for Git repositories using the ABF method",
+  "description": "A simple bus factor analyzer for Git repositories",
   "main": "lib/index.js",
   "type": "module",
   "bin": {
