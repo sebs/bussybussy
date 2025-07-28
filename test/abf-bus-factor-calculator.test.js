@@ -414,5 +414,123 @@ describe('ABFBusFactorCalculator', () => {
       assert.equal(doa['Charlie'], 0.01);
       assert.equal(result.busFactor, 2); // Alice + Bob
     });
+
+    it('should handle single author repository', () => {
+      const fileAuthorship = {
+        'file1.js': { 'Alice': 100 },
+        'file2.js': { 'Alice': 100 },
+        'file3.js': { 'Alice': 100 }
+      };
+
+      const result = calculator.calculateABF(fileAuthorship);
+
+      assert.equal(result.busFactor, 1);
+      assert.deepEqual(result.removedAuthors, ['Alice']);
+      assert.equal(result.ownerlessRatio, 1.0);
+    });
+
+    it('should handle repository with no files', () => {
+      const fileAuthorship = {};
+
+      const result = calculator.calculateABF(fileAuthorship);
+
+      assert.equal(result.busFactor, 0);
+      assert.deepEqual(result.removedAuthors, []);
+      assert.ok(isNaN(result.ownerlessRatio)); // Division by zero
+    });
+
+    it('should handle files with zero lines', () => {
+      const fileAuthorship = {
+        'empty.js': {}
+      };
+
+      const ownership = calculator.getFileOwnership(fileAuthorship);
+      assert.equal(ownership['empty.js'], null);
+
+      const result = calculator.calculateABF(fileAuthorship);
+      assert.equal(result.busFactor, 0);
+    });
+
+    it('should handle exact 50% threshold boundary', () => {
+      const fileAuthorship = {
+        'file1.js': { 'A': 100 },
+        'file2.js': { 'B': 100 }
+      };
+
+      const result = calculator.calculateABF(fileAuthorship);
+
+      // Removing A gives exactly 50% (1/2), which is NOT > 0.5
+      // Need to remove both to exceed threshold
+      assert.equal(result.busFactor, 2);
+    });
+
+    it('should handle multiple authors with identical DOA', () => {
+      const fileAuthorship = {
+        'file1.js': { 'A': 100 },
+        'file2.js': { 'B': 100 },
+        'file3.js': { 'C': 100 },
+        'file4.js': { 'D': 100 }
+      };
+
+      const result = calculator.calculateABF(fileAuthorship);
+      
+      // All authors have DOA of 0.25
+      // Need to remove 3 to exceed 50% threshold
+      assert.equal(result.busFactor, 3);
+      assert.equal(result.removedAuthors.length, 3);
+    });
+
+    it('should correctly count ownerless files with null owners', () => {
+      const fileOwnership = {
+        'file1.js': 'Alice',
+        'file2.js': null,
+        'file3.js': 'Bob',
+        'file4.js': null
+      };
+
+      // Test the calculateFinalOwnerlessRatio directly
+      const ratio = calculator.calculateFinalOwnerlessRatio(fileOwnership, ['Alice']);
+      
+      // Only file1.js becomes ownerless when Alice is removed
+      // file2.js and file4.js have no owner (null) so they don't count as becoming ownerless
+      assert.equal(ratio, 0.25); // 1/4 files
+    });
+
+    it('should handle very large repositories efficiently', () => {
+      const fileAuthorship = {};
+      // Create 1000 files distributed among 10 authors
+      for (let i = 0; i < 1000; i++) {
+        const author = `Author${i % 10}`;
+        fileAuthorship[`file${i}.js`] = { [author]: 100 };
+      }
+
+      const start = Date.now();
+      const result = calculator.calculateABF(fileAuthorship);
+      const duration = Date.now() - start;
+
+      // Each author owns 100 files (10%)
+      // Need to remove 6 authors to exceed 50%
+      assert.equal(result.busFactor, 6);
+      assert.ok(duration < 1000, `Calculation took ${duration}ms, should be < 1000ms`);
+    });
+
+    it('should handle threshold boundary with floating point precision', () => {
+      // Test case where floating point arithmetic might cause issues
+      const fileAuthorship = {
+        'file1.js': { 'A': 100 },
+        'file2.js': { 'A': 100 },
+        'file3.js': { 'A': 100 },
+        'file4.js': { 'B': 100 },
+        'file5.js': { 'B': 100 },
+        'file6.js': { 'C': 100 }
+      };
+
+      const result = calculator.calculateABF(fileAuthorship);
+
+      // A owns 3/6 = 0.5 exactly
+      // Removing A gives 3/6 = 0.5, which is NOT > 0.5
+      // Need to also remove B to get 5/6 = 0.833... > 0.5
+      assert.equal(result.busFactor, 2);
+    });
   });
 });
