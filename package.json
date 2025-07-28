@@ -5,7 +5,7 @@
   "description": "Bus Factor Analyzer - Calculate the bus factor of Git repositories",
   "main": "lib/index.js",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test test/"
   },
   "dependencies": {
     "commander": "^11.0.0",
