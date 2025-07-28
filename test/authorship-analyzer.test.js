@@ -151,23 +151,75 @@ author-mail <alice@example.com>
     });
 
     it('should handle git blame errors gracefully', async () => {
-      let warningEmitted = false;
-      let warningMessage = '';
-
-      analyzer.on('warning', (msg) => {
-        warningEmitted = true;
-        warningMessage = msg;
-      });
-
-      mockGit.raw.mock.mockImplementation(async () => {
-        throw new Error('fatal: no such path');
-      });
-
-      const authorship = await analyzer.getFileAuthorship('nonexistent.js');
+      analyzer.quiet = true;
+      analyzer.json = false;
+      const errorMessage = 'fatal: no such path file.js in HEAD';
       
-      assert.deepEqual(authorship, {});
-      assert.equal(warningEmitted, true);
-      assert.ok(warningMessage.includes('Could not analyze "nonexistent.js"'));
+      mockGit.raw.mock.mockImplementation(async () => {
+        throw new Error(errorMessage);
+      });
+
+      const result = await analyzer.getFileAuthorship('file.js');
+      assert.deepEqual(result, {});
+      assert.equal(analyzer.errors.length, 1);
+      assert.ok(analyzer.errors[0].includes('Could not analyze'));
+    });
+
+    it('should handle binary files gracefully', async () => {
+      analyzer.quiet = true;
+      analyzer.json = false;
+      
+      mockGit.raw.mock.mockImplementation(async () => {
+        throw new Error('binary file cannot be annotated');
+      });
+
+      const mockEmit = mock.fn();
+      analyzer.emit = mockEmit;
+
+      const result = await analyzer.getFileAuthorship('image.png');
+      assert.deepEqual(result, {});
+      // Should warn but not add to errors for binary files
+      assert.equal(analyzer.errors.length, 0);
+      assert.equal(mockEmit.mock.calls.length, 1);
+      assert.equal(mockEmit.mock.calls[0].arguments[0], 'warning');
+      assert.ok(mockEmit.mock.calls[0].arguments[1].includes('Skipping binary file'));
+    });
+
+    it('should provide specific error messages for common errors', async () => {
+      analyzer.quiet = true;
+      analyzer.json = false;
+      
+      const testCases = [
+        {
+          error: { code: 'ENOMEM', message: 'out of memory' },
+          expectedMessage: 'Out of memory while analyzing'
+        },
+        {
+          error: { code: 'ENOENT', message: 'no such file' },
+          expectedMessage: 'File not found'
+        },
+        {
+          error: { code: 'EACCES', message: 'permission denied' },
+          expectedMessage: 'Permission denied accessing'
+        },
+        {
+          error: { code: 'UNKNOWN', message: 'unknown error' },
+          expectedMessage: 'Failed to analyze'
+        }
+      ];
+
+      for (const { error, expectedMessage } of testCases) {
+        analyzer.errors = []; // Reset errors
+        mockGit.raw.mock.mockImplementation(async () => {
+          const err = new Error(error.message);
+          err.code = error.code;
+          throw err;
+        });
+
+        await analyzer.getFileAuthorship('test.js');
+        assert.equal(analyzer.errors.length, 1);
+        assert.ok(analyzer.errors[0].includes(expectedMessage));
+      }
     });
 
     it('should handle empty files', async () => {

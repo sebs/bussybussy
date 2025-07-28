@@ -103,6 +103,61 @@ describe('GitHandler', () => {
       );
     });
 
+    it('should reject invalid Git URLs', async () => {
+      const invalidUrls = [
+        'file:///etc/passwd',
+        'ext::sh -c "rm -rf /"',
+        'https://github.com/user/repo.git; rm -rf /',
+        'https://github.com/user/repo.git | cat /etc/passwd',
+        'https://github.com/user/repo.git --upload-pack=evil',
+        'javascript:alert(1)',
+        'data:text/plain,hello'
+      ];
+
+      for (const url of invalidUrls) {
+        await assert.rejects(
+          async () => await gitHandler.cloneRepo(url),
+          {
+            name: 'Error',
+            message: 'Invalid or potentially dangerous repository URL'
+          }
+        );
+      }
+    });
+
+    it('should sanitize repository names', async () => {
+      const mockClone = mock.fn(async () => {});
+      gitHandler.git.clone = mockClone;
+
+      const testCases = [
+        { url: 'https://github.com/user/repo-name.git', expected: 'repo-name' },
+        { url: 'https://github.com/user/repo%20name.git', expected: 'repo20name' },
+        { url: 'https://github.com/user/repo-123.git', expected: 'repo-123' },
+        { url: 'https://github.com/user/REPO_NAME.git', expected: 'REPO_NAME' },
+        { url: 'https://github.com/user/repo@version.git', expected: 'repoversion' },
+        { url: 'https://github.com/user/repo#branch.git', expected: 'repobranch' }
+      ];
+
+      for (const { url, expected } of testCases) {
+        const result = await gitHandler.cloneRepo(url);
+        assert.equal(result, path.join(testTempDir, expected));
+      }
+    });
+
+    it('should prevent path traversal attacks', async () => {
+      const mockClone = mock.fn(async () => {});
+      gitHandler.git.clone = mockClone;
+
+      // Even with valid URL, ensure repo path stays within temp directory
+      const url = 'https://github.com/user/normal-repo.git';
+      const result = await gitHandler.cloneRepo(url);
+      
+      const resolvedPath = path.resolve(result);
+      const resolvedTempDir = path.resolve(testTempDir);
+      
+      assert.ok(resolvedPath.startsWith(resolvedTempDir));
+    });
+
     it('should log cloning message when not quiet', async () => {
       const verboseGitHandler = new GitHandler({ quiet: false });
       const mockClone = mock.fn(async () => {});
