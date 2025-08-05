@@ -4,6 +4,7 @@
   "type": "module",
   "description": "Bus Factor Analyzer - Calculate the bus factor of Git repositories",
   "main": "lib/index.js",
+  "license": "MIT",
   "scripts": {
     "test": "node --test test/"
   },
