@@ -2,6 +2,8 @@
 
 A command-line tool to analyze the bus factor of Git repositories using multiple calculation methods.
 
+> Evaluation pourposes only: Calculations are wrong, it will probably delete all your code and most likely go to the kitchen and eat the cake too. 
+
 ## What is Bus Factor?
 
 The "bus factor" is the minimum number of team members that have to suddenly disappear from a project (e.g., hit by a bus) before the project stalls due to lack of knowledgeable or competent personnel. A low bus factor indicates high risk - the loss of just one or two key developers could severely impact the project.
