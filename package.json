@@ -1,6 +1,6 @@
 {
   "name": "bus-factor-analyzer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "Bus Factor Analyzer - Calculate the bus factor of Git repositories",
   "main": "lib/index.js",
